@@ -3,7 +3,7 @@ import API from '../utils/api'
 
 const SchemeFinder = () => {
   const [form, setForm] = useState({
-    name: 'Applicant',
+    name: '',
     age: '',
     gender: 'Male',
     annualIncome: '',
@@ -17,6 +17,7 @@ const SchemeFinder = () => {
     isPrimaryEarnerDeceased: false,
   })
   const [loading, setLoading] = useState(false)
+  const [pdfLoading, setPdfLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
 
@@ -40,31 +41,50 @@ const SchemeFinder = () => {
     }
   }
 
+  const getPayload = () => ({
+    ...form,
+    age: Number(form.age),
+    annualIncome: Number(form.annualIncome),
+    familySize: Number(form.familySize),
+  })
+
   const findSchemes = async () => {
     if (!form.age || !form.annualIncome) {
       setError('Please fill all fields')
       return
     }
-
     setLoading(true)
     setError(null)
     setResult(null)
-
     try {
-      const payload = {
-        ...form,
-        age: Number(form.age),
-        annualIncome: Number(form.annualIncome),
-        familySize: Number(form.familySize),
-      }
-
-      const response = await API.post('/schemes/check', payload)
+      const response = await API.post('/schemes/check', getPayload())
       setResult(response.data)
     } catch (err) {
       console.error(err)
       setError(err.response?.data?.errors?.join(', ') || 'Failed to fetch schemes. Please try again.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const downloadPDF = async () => {
+    setPdfLoading(true)
+    try {
+      const response = await API.post('/schemes/report', getPayload(), {
+        responseType: 'blob'
+      })
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `schemes-${form.name.replace(/\s+/g, '-')}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      setError('Failed to download PDF. Please try again.')
+    } finally {
+      setPdfLoading(false)
     }
   }
 
@@ -85,33 +105,20 @@ const SchemeFinder = () => {
       <div style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '24px', marginBottom: '24px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
 
-          {/* Name */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Full Name</label>
-            <input
-              type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
+            <input type="text" name="name" value={form.name} onChange={handleChange}
               placeholder="Enter your name"
-              style={{ width: '100%', padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '14px' }}
-            />
+              style={{ width: '100%', padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '14px' }} />
           </div>
 
-          {/* Age */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Age</label>
-            <input
-              type="number"
-              name="age"
-              value={form.age}
-              onChange={handleChange}
+            <input type="number" name="age" value={form.age} onChange={handleChange}
               placeholder="Enter your age"
-              style={{ width: '100%', padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '14px' }}
-            />
+              style={{ width: '100%', padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '14px' }} />
           </div>
 
-          {/* Gender */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Gender</label>
             <select name="gender" value={form.gender} onChange={handleChange}
@@ -122,20 +129,13 @@ const SchemeFinder = () => {
             </select>
           </div>
 
-          {/* Annual Income */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Annual Income (₹)</label>
-            <input
-              type="number"
-              name="annualIncome"
-              value={form.annualIncome}
-              onChange={handleChange}
+            <input type="number" name="annualIncome" value={form.annualIncome} onChange={handleChange}
               placeholder="Enter annual income"
-              style={{ width: '100%', padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '14px' }}
-            />
+              style={{ width: '100%', padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '14px' }} />
           </div>
 
-          {/* Caste Category */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Caste Category</label>
             <select name="casteCategory" value={form.casteCategory} onChange={handleChange}
@@ -147,7 +147,6 @@ const SchemeFinder = () => {
             </select>
           </div>
 
-          {/* District */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>District</label>
             <select name="district" value={form.district} onChange={handleChange}
@@ -158,7 +157,6 @@ const SchemeFinder = () => {
             </select>
           </div>
 
-          {/* Occupation */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Occupation</label>
             <select name="occupation" value={form.occupation} onChange={handleChange}
@@ -170,20 +168,13 @@ const SchemeFinder = () => {
             </select>
           </div>
 
-          {/* Family Size */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Family Size</label>
-            <input
-              type="number"
-              name="familySize"
-              value={form.familySize}
-              onChange={handleChange}
+            <input type="number" name="familySize" value={form.familySize} onChange={handleChange}
               placeholder="Number of family members"
-              style={{ width: '100%', padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '14px' }}
-            />
+              style={{ width: '100%', padding: '10px', border: '1px solid #D1D5DB', borderRadius: '6px', fontSize: '14px' }} />
           </div>
 
-          {/* Property Owned */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Do you own a house?</label>
             <select name="propertyOwned" value={form.propertyOwned ? 'Yes' : 'No'} onChange={handleChange}
@@ -193,7 +184,6 @@ const SchemeFinder = () => {
             </select>
           </div>
 
-          {/* Is Widow */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Are you a widow?</label>
             <select name="isWidow" value={form.isWidow ? 'Yes' : 'No'} onChange={(e) => setForm({...form, isWidow: e.target.value === 'Yes'})}
@@ -203,7 +193,6 @@ const SchemeFinder = () => {
             </select>
           </div>
 
-          {/* Is Disabled */}
           <div>
             <label style={{ fontWeight: '600', color: '#1A3C6E', display: 'block', marginBottom: '6px' }}>Do you have a disability?</label>
             <select name="isDisabled" value={form.isDisabled ? 'Yes' : 'No'} onChange={(e) => setForm({...form, isDisabled: e.target.value === 'Yes'})}
@@ -245,9 +234,32 @@ const SchemeFinder = () => {
       {/* Results */}
       {result && (
         <div>
-          <h2 style={{ color: '#1B7A3E', fontWeight: 'bold', fontSize: '1.25rem', marginBottom: '16px' }}>
-            ✅ You qualify for {result.summary?.totalEligible || 0} schemes!
-          </h2>
+
+          {/* Results Header with PDF button */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
+            <h2 style={{ color: '#1B7A3E', fontWeight: 'bold', fontSize: '1.25rem' }}>
+              ✅ You qualify for {result.summary?.totalEligible || 0} schemes!
+            </h2>
+            <button
+              onClick={downloadPDF}
+              disabled={pdfLoading}
+              style={{
+                backgroundColor: pdfLoading ? '#9CA3AF' : '#1A3C6E',
+                color: 'white',
+                padding: '10px 20px',
+                borderRadius: '6px',
+                fontWeight: '600',
+                border: 'none',
+                cursor: pdfLoading ? 'not-allowed' : 'pointer',
+                fontSize: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+            >
+              {pdfLoading ? '⏳ Generating...' : '📄 Download PDF Report'}
+            </button>
+          </div>
 
           {result.eligibleSchemes?.map((scheme, i) => (
             <div key={i} style={{ backgroundColor: 'white', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', padding: '24px', marginBottom: '16px', borderLeft: '4px solid #1B7A3E' }}>
@@ -255,7 +267,7 @@ const SchemeFinder = () => {
               <p style={{ color: '#4B5563', fontSize: '14px', marginTop: '8px' }}>{scheme.description}</p>
 
               <div style={{ backgroundColor: '#D1FAE5', borderRadius: '6px', padding: '10px', marginTop: '12px' }}>
-                <strong style={{ color: '#1B7A3E' }}>Why you qualify: </strong>
+                <strong style={{ color: '#1B7A3E' }}>Why you qualify:</strong>
                 {scheme.matchedCriteria?.map((c, j) => (
                   <span key={j} style={{ color: '#1B7A3E', fontSize: '13px', display: 'block' }}>✔ {c}</span>
                 ))}
@@ -298,6 +310,7 @@ const SchemeFinder = () => {
               ⚖️ This is legal information, not legal advice. Visit the respective offices to confirm eligibility.
             </p>
           </div>
+
         </div>
       )}
     </div>
