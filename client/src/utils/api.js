@@ -1,8 +1,8 @@
 import axios from 'axios'
 
 const API = axios.create({
-  baseURL: 'https://willmade.onrender.com/api',
-  timeout: 60000,
+  baseURL: 'http://localhost:5000/api',
+  timeout: 30000,
 })
 
 export default API

@@ -12,8 +12,6 @@ app.use(
     origin: [
       "http://localhost:3000",
       "http://localhost:5173",
-      "https://willmade-coral.vercel.app",
-      "https://willmade-iota.vercel.app",
     ],
     credentials: true,
   }),
