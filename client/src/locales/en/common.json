@@ -1,0 +1,21 @@
+{
+  "appName": "WillMade",
+  "tagline": "Free Legal Guidance for Karnataka",
+  "nav": {
+    "home": "Home",
+    "rental": "Rental Analyzer",
+    "schemes": "Scheme Finder",
+    "rights": "Know Your Rights",
+    "property": "Property Analyzer"
+  },
+  "home": {
+    "hero": "Do You Know Your Legal Rights?",
+    "subhero": "Free legal guidance for every Karnataka family",
+    "stat1": "70% families have no valid will",
+    "stat2": "1 in 3 tenants sign unfair agreements",
+    "stat3": "₹10,000 avg lawyer fee saved",
+    "cta": "Get Free Legal Help"
+  },
+  "disclaimer": "This is legal information, not legal advice. Consult a lawyer for your specific situation.",
+  "nalsa": "Get Free Legal Help — NALSA"
+}
